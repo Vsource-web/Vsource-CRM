@@ -1,28 +1,51 @@
 // crm-frontend-next\app\services\auth.service.ts
-import { api } from "@/lib/api";
-
-export interface LoginDto {
-  email: string;
-  password: string;
-}
-
 export const authService = {
-  async login(data: LoginDto) {
-    const response = await api.post("/auth/login", data);
-    return response.data;
-  },
-  async logout() {
-    const response = await api.post("/auth/logout");
-    return response.data;
+  login: async (
+    email: string,
+    password: string
+  ) => {
+    const response =
+      await fetch(
+        "/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
+
+    return await response.json();
   },
 
-  async register(data: any) {
-    const response = await api.post("/auth/register", data);
-    return response.data;
+  logout: async () => {
+    await fetch(
+      "/api/auth/logout",
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
   },
 
-  async me() {
-    const response = await api.get("/user/me");
-    return response.data;
+  me: async () => {
+    const response =
+      await fetch(
+        "/api/auth/me",
+        {
+          credentials: "include",
+        }
+      );
+
+    if (!response.ok)
+      return null;
+
+    return await response.json();
   },
 };

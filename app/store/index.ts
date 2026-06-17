@@ -63,10 +63,7 @@ export const useAuth = create<AuthState>()(
         try {
           set({ isLoading: true });
 
-          const data = await authService.login({
-            email,
-            password,
-          });
+          const data = await authService.login(email, password);
 
           set({
             user: data.user,
