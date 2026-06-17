@@ -83,6 +83,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = LeadCreateSchema.parse(await req.json());
+    console.log(body);
     const lead = await db.lead.create({
       data: body,
       include: {
