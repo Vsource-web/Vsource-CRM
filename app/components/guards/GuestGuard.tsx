@@ -1,4 +1,4 @@
-// app/page.tsx
+// components/guards/GuestGuard.tsx
 
 "use client";
 
@@ -7,7 +7,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/store";
 import { moduleLandingRoutes } from "@/rbac/routePermissions";
 
-export default function HomePage() {
+export default function GuestGuard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
 
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -15,10 +19,7 @@ export default function HomePage() {
   useEffect(() => {
     if (isLoading) return;
 
-    if (!isAuthenticated) {
-      router.replace("/login");
-      return;
-    }
+    if (!isAuthenticated) return;
 
     const firstModule = user?.role?.modulePermissions
       ?.filter((p) => p.canRead)
@@ -34,5 +35,17 @@ export default function HomePage() {
     router.replace(moduleLandingRoutes[firstModule.module.code]);
   }, [user, isAuthenticated, isLoading, router]);
 
-  return null;
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
+
+  return <>{children}</>;
 }
