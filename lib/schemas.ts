@@ -160,12 +160,6 @@ export const LeadUpdateSchema = LeadCreateSchema.partial()
   })
   .extend({
     counselorIds: z.array(z.string().uuid()).optional(),
-    timeline: z
-      .object({
-        description: z.string(),
-        nextFollowup: optDate,
-      })
-      .optional(),
   });
 
 export const LeadTimelineCreateSchema = z.object({
@@ -218,9 +212,13 @@ export const MbbsLeadCreateSchema = z.object({
   nextFollowup: optDate,
 });
 
-export const MbbsLeadUpdateSchema = MbbsLeadCreateSchema.partial().omit({
-  leadNumber: true,
-});
+export const MbbsLeadUpdateSchema = MbbsLeadCreateSchema.partial()
+  .omit({
+    leadNumber: true,
+  })
+  .extend({
+    counselorIds: z.array(z.string().uuid()).optional(),
+  });
 
 export const MbbsLeadTimelineCreateSchema = z.object({
   description: z.string().min(1),

@@ -144,7 +144,6 @@ export default function PageActions(props: PageActionsProps) {
     selectedCounselors,
     setSelectedCounselors,
   } = props;
-  console.log("selected", selected);
   const [branches, setBranches] = useState<Branch[]>([]);
 
   const { data: counselors } = useCounselors();

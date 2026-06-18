@@ -51,7 +51,6 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   try {
     const { id: leadId } = await params;
     const body = LeadTimelineCreateSchema.parse(await req.json());
-    const { leadId: _bodyLeadId, ...timelineData } = body;
 
     const lead = await db.lead.findUnique({ where: { id: leadId } });
     if (!lead) return notFound("Lead");
@@ -65,7 +64,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     }
 
     const timeline = await db.leadTimeline.create({
-      data: { leadId, ...timelineData },
+      data: { leadId, ...body },
       include: {
         createdBy: { select: { id: true, name: true } },
       },

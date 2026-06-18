@@ -23,7 +23,9 @@ model User {
 
   leadAssignments        LeadCounselor[]
   leadCounselorsAssigned LeadCounselor[] @relation("LeadAssignedBy")
-  assignedMbbsLeads      MbbsLead[]      @relation("MbbsCounselorLeads")
+
+  mbbsLeadAssignments        MbbsLeadCounselor[]
+  mbbsLeadCounselorsAssigned MbbsLeadCounselor[] @relation("MbbsLeadAssignedBy")
 
   students Student[] @relation("CounselorStudents")
 
@@ -231,6 +233,27 @@ model LeadCounselor {
   @@unique([leadId, counselorId])
 }
 
+model MbbsLeadCounselor {
+  id String @id @default(uuid())
+
+  mbbsLeadId String
+  mbbsLead   MbbsLead @relation(fields: [mbbsLeadId], references: [id], onDelete: Cascade)
+
+  counselorId String
+  counselor   User   @relation(fields: [counselorId], references: [id])
+
+  assignedAt DateTime @default(now())
+
+  assignedById String?
+  assignedBy   User?   @relation("MbbsLeadAssignedBy", fields: [assignedById], references: [id])
+
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([mbbsLeadId, counselorId])
+}
+
 model LeadTimeline {
   id String @id @default(uuid())
 
@@ -322,9 +345,7 @@ model MbbsLead {
 
   remarks String?
 
-  assignedCounselorId String?
-
-  assignedCounselor User? @relation("MbbsCounselorLeads", fields: [assignedCounselorId], references: [id])
+  counselors MbbsLeadCounselor[]
 
   status MbbsLeadStatus @default(new)
 

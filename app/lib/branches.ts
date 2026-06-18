@@ -1,5 +1,6 @@
 // lib/branches.ts
 
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -72,4 +73,12 @@ export const deleteBranch = async (id: string) => {
   });
 
   return data?.data || [];
+};
+
+export const useBranches = () => {
+  return useQuery({
+    queryKey: ["branches"],
+    queryFn: getBranches,
+    staleTime: 0,
+  });
 };

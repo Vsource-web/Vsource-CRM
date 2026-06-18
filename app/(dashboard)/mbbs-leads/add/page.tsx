@@ -34,15 +34,19 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Branch, getBranches } from "@/lib/branches";
+import { Branch, getBranches, useBranches } from "@/lib/branches";
 import {
+  Country,
   getCountries,
   getIntakes,
   getLeadSources,
+  Intake,
   LeadSource,
+  useCountries,
+  useIntakes,
+  useLeadSources,
 } from "@/lib/master-settings";
-
-const API_BASE_URL = "NEXT_PUBLIC_API_URL";
+import { useQuery } from "@tanstack/react-query";
 
 type DynamicOption = {
   id: string;
@@ -144,7 +148,7 @@ const mbbsFormSchema = z.object({
 
   preferredCountry: requiredText("Preferred country"),
   preferredIntake: optionalText,
-  preferredUniversity: requiredText("Preferred university / college"),
+  // preferredUniversity: requiredText("Preferred university / college"),
   preferredCourse: requiredText("Preferred course"),
 
   remarks: optionalText,
@@ -195,7 +199,7 @@ const getDefaultValues = (): MbbsFormValues => ({
 
   preferredCountry: "",
   preferredIntake: "",
-  preferredUniversity: "",
+  // preferredUniversity: "",
   preferredCourse: "MBBS",
 
   remarks: "",
@@ -210,102 +214,6 @@ const numberOrUndefined = (value?: string) => {
   }
 
   return Number(trimmedValue);
-};
-
-const getRecordString = (
-  record: Record<string, unknown>,
-  keys: string[],
-): string | undefined => {
-  for (const key of keys) {
-    const value = record[key];
-
-    if (typeof value === "string" && value.trim()) {
-      return value.trim();
-    }
-
-    if (typeof value === "number") {
-      return String(value);
-    }
-  }
-
-  return undefined;
-};
-
-const getArrayFromResponse = (data: unknown): unknown[] => {
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  if (data && typeof data === "object") {
-    const record = data as Record<string, unknown>;
-
-    if (Array.isArray(record.data)) {
-      return record.data;
-    }
-
-    if (Array.isArray(record.items)) {
-      return record.items;
-    }
-
-    if (Array.isArray(record.results)) {
-      return record.results;
-    }
-  }
-
-  return [];
-};
-
-const normalizeDynamicOptions = (
-  data: unknown,
-  fallbackPrefix: string,
-): DynamicOption[] => {
-  const items = getArrayFromResponse(data);
-
-  return items
-    .map((item, index) => {
-      if (typeof item === "string") {
-        return {
-          id: item,
-          name: item,
-        };
-      }
-
-      if (!item || typeof item !== "object") {
-        return null;
-      }
-
-      const record = item as Record<string, unknown>;
-
-      const id =
-        getRecordString(record, ["id", "_id", "value", "code", "name"]) ||
-        `${fallbackPrefix}-${index}`;
-
-      const name =
-        getRecordString(record, [
-          "name",
-          "title",
-          "label",
-          "value",
-          "countryName",
-          "intakeName",
-        ]) || `${fallbackPrefix} ${index + 1}`;
-
-      return {
-        id,
-        name,
-      };
-    })
-    .filter((item): item is DynamicOption => Boolean(item?.name));
-};
-
-const fetchDynamicOptions = async (endpoint: string) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to load ${endpoint}`);
-  }
-  const data = await response.json();
-  return data?.data || [];
 };
 
 function RequiredLabel({
@@ -331,15 +239,10 @@ function FormError({ message }: { message?: string }) {
   return <p className="text-sm font-medium text-destructive">{message}</p>;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function MbbsForm() {
   const router = useRouter();
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [countries, setCountries] = useState<DynamicOption[]>([]);
-  const [intakes, setIntakes] = useState<DynamicOption[]>([]);
-  const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
-
-  const [isCountriesLoading, setIsCountriesLoading] = useState(true);
-  const [isIntakesLoading, setIsIntakesLoading] = useState(true);
 
   const {
     register,
@@ -352,90 +255,12 @@ export default function MbbsForm() {
     defaultValues: getDefaultValues(),
   });
 
-  useEffect(() => {
-    const loadBranches = async () => {
-      try {
-        const data = await getBranches();
-        setBranches(data);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load branches");
-      }
-    };
-
-    loadBranches();
-  }, []);
-
-  useEffect(() => {
-    const loadCountries = async () => {
-      try {
-        setIsCountriesLoading(true);
-
-        const data = await fetchDynamicOptions("/countries");
-        setCountries(normalizeDynamicOptions(data, "country"));
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load countries");
-        setCountries([]);
-      } finally {
-        setIsCountriesLoading(false);
-      }
-    };
-
-    loadCountries();
-  }, []);
-  useEffect(() => {
-    const loadBranches = async () => {
-      try {
-        const data = await getBranches();
-
-        setBranches(data);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load branches");
-      }
-    };
-
-    loadBranches();
-  }, []);
-  useEffect(() => {
-    const loadMasters = async () => {
-      try {
-        const [countryData, intakeData, sourceData] = await Promise.all([
-          getCountries(),
-          getIntakes(),
-          getLeadSources(),
-        ]);
-
-        setCountries(countryData);
-        setIntakes(intakeData);
-        setLeadSources(sourceData);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load master data");
-      }
-    };
-
-    loadMasters();
-  }, []);
-  useEffect(() => {
-    const loadIntakes = async () => {
-      try {
-        setIsIntakesLoading(true);
-
-        const data = await fetchDynamicOptions("/intakes");
-        setIntakes(normalizeDynamicOptions(data, "intake"));
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load intakes");
-        setIntakes([]);
-      } finally {
-        setIsIntakesLoading(false);
-      }
-    };
-
-    loadIntakes();
-  }, []);
+  const { data: branches = [] } = useBranches();
+  const { data: countries = [], isLoading: isCountriesLoading } =
+    useCountries();
+  const { data: intakes = [] } = useIntakes();
+  const { data: leadSources = [], isLoading: isIntakesLoading } =
+    useLeadSources();
 
   const onSubmit = async (values: MbbsFormValues, continueFlow = false) => {
     try {
@@ -533,8 +358,11 @@ export default function MbbsForm() {
                           </SelectTrigger>
 
                           <SelectContent>
-                            {branches.map((branch) => (
-                              <SelectItem key={branch.id} value={branch.id}>
+                            {branches?.map((branch: Branch, idx: number) => (
+                              <SelectItem
+                                key={branch.id || idx}
+                                value={branch.id}
+                              >
                                 {branch.name}
                               </SelectItem>
                             ))}
@@ -655,11 +483,16 @@ export default function MbbsForm() {
                           </SelectTrigger>
 
                           <SelectContent>
-                            {leadSources.map((item) => (
-                              <SelectItem key={item.id} value={item.name}>
-                                {item.name}
-                              </SelectItem>
-                            ))}
+                            {leadSources?.map(
+                              (item: LeadSource, idx: number) => (
+                                <SelectItem
+                                  key={item.id || idx}
+                                  value={item.name}
+                                >
+                                  {item.name}
+                                </SelectItem>
+                              ),
+                            )}
                           </SelectContent>
                         </Select>
                       )}
@@ -886,15 +719,17 @@ export default function MbbsForm() {
                               <SelectItem value="loading-countries" disabled>
                                 Loading countries...
                               </SelectItem>
-                            ) : countries.length > 0 ? (
-                              countries.map((country) => (
-                                <SelectItem
-                                  key={country.id}
-                                  value={country.name}
-                                >
-                                  {country.name}
-                                </SelectItem>
-                              ))
+                            ) : countries?.length > 0 ? (
+                              countries?.map(
+                                (country: Country, idx: number) => (
+                                  <SelectItem
+                                    key={country.id || idx}
+                                    value={country.name}
+                                  >
+                                    {country.name}
+                                  </SelectItem>
+                                ),
+                              )
                             ) : (
                               <SelectItem value="no-countries" disabled>
                                 No countries found
@@ -926,9 +761,12 @@ export default function MbbsForm() {
                               <SelectItem value="loading-intakes" disabled>
                                 Loading intakes...
                               </SelectItem>
-                            ) : intakes.length > 0 ? (
-                              intakes.map((intake) => (
-                                <SelectItem key={intake.id} value={intake.name}>
+                            ) : intakes?.length > 0 ? (
+                              intakes?.map((intake: Intake, idx: number) => (
+                                <SelectItem
+                                  key={intake.id || idx}
+                                  value={intake.name}
+                                >
                                   {intake.name}
                                 </SelectItem>
                               ))

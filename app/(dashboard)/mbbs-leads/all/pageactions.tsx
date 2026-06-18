@@ -37,6 +37,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useCounselors } from "@/lib/lead";
 
 interface MbbsLeadRecord {
   id: string;
@@ -63,11 +64,13 @@ interface MbbsLeadRecord {
     name: string;
   };
 
-  assignedCounselor?: {
-    id: string;
-    name: string;
-  };
-  assignedCounselorId?: string;
+  counselors?: {
+    isPrimary: boolean;
+    counselor: {
+      id: string;
+      name: string;
+    };
+  }[];
 
   status: MbbsLeadStatus;
 
@@ -109,6 +112,9 @@ interface PageActionsProps {
 
   branchOptions: string[];
   statusStyle: Record<MbbsLeadStatus, string>;
+
+  selectedCounselors: string[];
+  setSelectedCounselors: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export default function PageActions(props: PageActionsProps) {
@@ -121,11 +127,13 @@ export default function PageActions(props: PageActionsProps) {
     setLeadIdToDelete,
     handleUpdateLead,
     executeDeleteLead,
-    branchOptions,
-    statusStyle,
+    selectedCounselors,
+    setSelectedCounselors,
   } = props;
 
   const [branches, setBranches] = useState<Branch[]>([]);
+
+  const { data: counselors } = useCounselors();
 
   const { data: intakes = [], isLoading: intakeLoad } = useQuery({
     queryKey: ["intake"],
@@ -163,6 +171,14 @@ export default function PageActions(props: PageActionsProps) {
       return data?.data || [];
     },
   });
+
+  useEffect(() => {
+    if (editingLead?.counselors) {
+      setSelectedCounselors(
+        editingLead.counselors.map((c: any) => c.counselor.id),
+      );
+    }
+  }, [editingLead]);
 
   useEffect(() => {
     const loadBranches = async () => {
@@ -1020,6 +1036,36 @@ export default function PageActions(props: PageActionsProps) {
                         )}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="border rounded-xl p-3 space-y-2 max-h-48 overflow-y-auto">
+                    {counselors?.map(
+                      (counselor: { id: string; name: string }) => (
+                        <label
+                          key={counselor.id}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedCounselors.includes(counselor.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCounselors((prev) => [
+                                  ...prev,
+                                  counselor.id,
+                                ]);
+                              } else {
+                                setSelectedCounselors((prev) =>
+                                  prev.filter((id) => id !== counselor.id),
+                                );
+                              }
+                            }}
+                          />
+
+                          <span>{counselor.name}</span>
+                        </label>
+                      ),
+                    )}
                   </div>
 
                   {/* Counselling Date */}
