@@ -19,7 +19,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
       where: { id },
       include: {
         branch: true,
-        assignedCounselor: { select: { id: true, name: true, email: true } },
+        counselors: {
+          select: { counselor: { select: { name: true, id: true } } },
+        },
         timelines: {
           include: {
             createdBy: { select: { id: true, name: true } },
@@ -46,7 +48,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       data: body,
       include: {
         branch: { select: { id: true, name: true } },
-        assignedCounselor: { select: { id: true, name: true } },
+        counselors: {
+          select: { counselor: { select: { name: true, id: true } } },
+        },
       },
     });
     return ok(lead, "Lead updated successfully");

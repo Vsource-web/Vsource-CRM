@@ -151,36 +151,29 @@ interface UiState {
   setCommandOpen: (v: boolean) => void;
 }
 
-export const useUi = create<UiState>()(
-  persist(
-    (set, get) => ({
-      sidebarCollapsed: false,
-      darkMode: false,
+export const useUi = create<UiState>()((set, get) => ({
+  sidebarCollapsed: false,
+  darkMode: false,
 
-      toggleSidebar: () =>
-        set({
-          sidebarCollapsed: !get().sidebarCollapsed,
-        }),
-
-      toggleDark: () => {
-        const v = !get().darkMode;
-
-        if (typeof document !== "undefined") {
-          document.documentElement.classList.toggle("dark", v);
-        }
-
-        set({ darkMode: v });
-      },
-
-      commandOpen: false,
-
-      setCommandOpen: (v) =>
-        set({
-          commandOpen: v,
-        }),
+  toggleSidebar: () =>
+    set({
+      sidebarCollapsed: !get().sidebarCollapsed,
     }),
-    {
-      name: "vsource-ui",
-    },
-  ),
-);
+
+  toggleDark: () => {
+    const v = !get().darkMode;
+
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", v);
+    }
+
+    set({ darkMode: v });
+  },
+
+  commandOpen: false,
+
+  setCommandOpen: (v) =>
+    set({
+      commandOpen: v,
+    }),
+}));

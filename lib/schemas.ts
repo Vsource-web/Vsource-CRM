@@ -13,17 +13,14 @@ import { z } from "zod";
 // ---------------------------------------------------------------------------
 const uuid = z.string().uuid();
 const optUuid = uuid.optional();
-const optStr = z.string().optional();
-const optFloat = z.number().optional();
-const optInt = z.number().int().optional();
+const optStr = z.string().nullable().optional();
+const optFloat = z.number().nullable().optional();
+const optInt = z.number().int().nullable().optional();
 const optBool = z.boolean().optional();
-const optDate = z.preprocess(
-  (arg) => {
-    if (arg === "" || arg === null || arg === undefined) return undefined;
-    return new Date(arg as string | number);
-  },
-  z.date().optional()
-);
+const optDate = z.preprocess((arg) => {
+  if (arg === "" || arg === null || arg === undefined) return undefined;
+  return new Date(arg as string | number);
+}, z.date().nullable().optional());
 
 // ---------------------------------------------------------------------------
 // Branch

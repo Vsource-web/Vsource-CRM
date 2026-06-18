@@ -56,7 +56,7 @@ interface LeadRecord {
   passportExpireDate?: string | null;
 
   source?: string;
-
+  branchId: string;
   branch?: {
     id: string;
     name: string;
@@ -668,6 +668,7 @@ export default function PageActions(props: PageActionsProps) {
                         const targetBranch = branches.find((b) => b.id === val);
                         setEditingLead({
                           ...editingLead,
+                          branchId: targetBranch?.id ?? "",
                           branch: targetBranch
                             ? { id: targetBranch.id, name: targetBranch.name }
                             : undefined,
