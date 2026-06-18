@@ -46,6 +46,7 @@ const statusTabs: Array<LeadStatus | "all"> = [
   "converted",
   "lost",
 ];
+
 interface LeadRecord {
   id: string;
   leadNumber: string;
@@ -68,12 +69,13 @@ interface LeadRecord {
     name: string;
   };
 
-  assignedCounselor?: {
-    id: string;
-    name: string;
-  };
-
-  assignedCounselorId?: string;
+  counselors?: {
+    isPrimary: boolean;
+    counselor: {
+      id: string;
+      name: string;
+    };
+  }[];
 
   preferredCountry?: string;
   preferredIntake?: string;
@@ -136,6 +138,7 @@ export default function AllLeadsPage() {
   const [branch, setBranch] = useState("all");
   const [source, setSource] = useState("all");
   const [page, setPage] = useState(1);
+  const [selectedCounselors, setSelectedCounselors] = useState<string[]>([]);
 
   // Modals & Action States
   const [selected, setSelected] = useState<LeadRecord | null>(null);
@@ -243,7 +246,10 @@ export default function AllLeadsPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editingLead),
+        body: JSON.stringify({
+          ...editingLead,
+          counselorIds: selectedCounselors,
+        }),
       });
 
       setLeads((current) =>
@@ -481,7 +487,20 @@ export default function AllLeadsPage() {
                           <p className="text-muted-foreground uppercase text-[10px]">
                             Counselor
                           </p>
-                          <p>{lead.assignedCounselor?.name || "—"}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {lead?.counselors?.length ? (
+                              lead?.counselors?.map((coun, idx) => (
+                                <Badge key={coun.counselor?.id || idx}>
+                                  {coun?.counselor?.name}
+                                  {coun.isPrimary && " (Primary)"}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                No counselors assigned
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="col-span-2">
@@ -623,7 +642,20 @@ export default function AllLeadsPage() {
                             {lead.branch?.name || "—"}
                           </td>
                           <td className="px-4 py-3.5 align-middle whitespace-nowrap">
-                            {lead.assignedCounselor?.name || "—"}
+                            <div className="flex flex-wrap gap-2">
+                              {lead?.counselors?.length ? (
+                                lead?.counselors.map((coun, idx) => (
+                                  <Badge key={coun.counselor?.id || idx}>
+                                    {coun?.counselor?.name}
+                                    {coun.isPrimary && " (Primary)"}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  No counselors assigned
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3.5 align-middle whitespace-nowrap">
                             {lead.preferredCountry || "—"}
@@ -741,6 +773,8 @@ export default function AllLeadsPage() {
         executeDeleteLead={executeDeleteLead}
         branchOptions={branchOptions}
         statusStyle={statusStyle}
+        selectedCounselors={selectedCounselors}
+        setSelectedCounselors={setSelectedCounselors}
       />
     </PageTransition>
   );

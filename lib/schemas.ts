@@ -154,9 +154,19 @@ export const LeadCreateSchema = z.object({
   remarks: optStr,
 });
 
-export const LeadUpdateSchema = LeadCreateSchema.partial().omit({
-  leadNumber: true,
-});
+export const LeadUpdateSchema = LeadCreateSchema.partial()
+  .omit({
+    leadNumber: true,
+  })
+  .extend({
+    counselorIds: z.array(z.string().uuid()).optional(),
+    timeline: z
+      .object({
+        description: z.string(),
+        nextFollowup: optDate,
+      })
+      .optional(),
+  });
 
 export const LeadTimelineCreateSchema = z.object({
   description: z.string().min(1),

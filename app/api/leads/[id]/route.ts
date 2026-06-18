@@ -43,15 +43,50 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
     const { id } = await params;
     const body = LeadUpdateSchema.parse(await req.json());
-    const lead = await db.lead.update({
-      where: { id },
-      data: body,
-      include: {
-        branch: { select: { id: true, name: true } },
-        counselors: {
-          select: { counselor: { select: { name: true, id: true } } },
+    const { counselorIds, ...leadData } = body;
+    const lead = await db.$transaction(async (tx) => {
+      const updatedLead = await tx.lead.update({
+        where: { id },
+        data: leadData,
+      });
+
+      if (counselorIds) {
+        await tx.leadCounselor.deleteMany({
+          where: {
+            leadId: id,
+          },
+        });
+
+        await tx.leadCounselor.createMany({
+          data: counselorIds.map((counselorId, index) => ({
+            leadId: id,
+            counselorId,
+            isPrimary: index === 0,
+          })),
+        });
+      }
+
+      return tx.lead.findUnique({
+        where: { id },
+        include: {
+          branch: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          counselors: {
+            include: {
+              counselor: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
-      },
+      });
     });
     return ok(lead, "Lead updated successfully");
   } catch (err) {

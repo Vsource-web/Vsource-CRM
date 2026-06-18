@@ -67,6 +67,9 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         include: {
           branch: { select: { id: true, name: true, code: true } },
+          counselors: {
+            select: { counselor: { select: { name: true, id: true } } },
+          },
           _count: { select: { timelines: true } },
         },
       }),

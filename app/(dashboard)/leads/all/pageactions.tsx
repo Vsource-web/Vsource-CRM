@@ -63,9 +63,11 @@ interface LeadRecord {
   };
 
   counselors?: {
-    id: string;
-    name: string;
-    isPrimary?: boolean;
+    isPrimary: boolean;
+    counselor: {
+      id: string;
+      name: string;
+    };
   }[];
 
   preferredCountry?: string;
@@ -124,6 +126,9 @@ interface PageActionsProps {
 
   branchOptions: string[];
   statusStyle: Record<LeadStatus, string>;
+
+  selectedCounselors: string[];
+  setSelectedCounselors: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export default function PageActions(props: PageActionsProps) {
@@ -136,10 +141,11 @@ export default function PageActions(props: PageActionsProps) {
     setLeadIdToDelete,
     handleUpdateLead,
     executeDeleteLead,
+    selectedCounselors,
+    setSelectedCounselors,
   } = props;
-
+  console.log("selected", selected);
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedCounselors, setSelectedCounselors] = useState<string[]>([]);
 
   const { data: counselors } = useCounselors();
 
@@ -196,7 +202,9 @@ export default function PageActions(props: PageActionsProps) {
 
   useEffect(() => {
     if (editingLead?.counselors) {
-      setSelectedCounselors(editingLead.counselors.map((c) => c.id));
+      setSelectedCounselors(
+        editingLead.counselors.map((c: any) => c.counselor.id),
+      );
     }
   }, [editingLead]);
 
@@ -292,10 +300,10 @@ export default function PageActions(props: PageActionsProps) {
 
                       <div className="flex flex-wrap gap-2">
                         {selected.counselors?.length ? (
-                          selected.counselors.map((counselor) => (
-                            <Badge key={counselor.id}>
-                              {counselor.name}
-                              {counselor.isPrimary && " (Primary)"}
+                          selected.counselors.map((coun, idx) => (
+                            <Badge key={coun.counselor?.id || idx}>
+                              {coun?.counselor?.name}
+                              {coun.isPrimary && " (Primary)"}
                             </Badge>
                           ))
                         ) : (
