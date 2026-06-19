@@ -7,6 +7,7 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import db from "@/lib/prisma";
+import { getAuthorizedUser } from "@/lib/rbac";
 import {
   ok,
   created,
@@ -15,6 +16,7 @@ import {
   buildMeta,
 } from "@/lib/api-helpers";
 import { UserCreateSchema } from "@/lib/schemas";
+import { MODULES, PERMISSIONS } from "@/lib/module-codes";
 
 const USER_SELECT = {
   id: true,
@@ -28,6 +30,8 @@ const USER_SELECT = {
 
 export async function GET(req: NextRequest) {
   try {
+    await getAuthorizedUser(req, MODULES.USERS, PERMISSIONS.READ);
+
     const sp = req.nextUrl.searchParams;
     const { skip, take, page, limit } = parsePagination(sp);
 
@@ -65,8 +69,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    await getAuthorizedUser(req, MODULES.USERS, PERMISSIONS.CREATE);
+
     const { branchIds, password, ...rest } = UserCreateSchema.parse(
-      await req.json()
+      await req.json(),
     );
 
     const hashedPassword = await bcrypt.hash(password, 10);

@@ -37,6 +37,12 @@ model User {
   mbbsTimelinesCreated MbbsLeadTimeline[] @relation("MbbsTimelineCreatedBy")
   mbbsTimelinesUpdated MbbsLeadTimeline[] @relation("MbbsTimelineUpdatedBy")
 
+  leadsCreated Lead[] @relation("LeadCreatedBy")
+  leadsUpdated Lead[] @relation("LeadUpdatedBy")
+
+  mbbsLeadsCreated MbbsLead[] @relation("MbbsLeadCreatedBy")
+  mbbsLeadsUpdated MbbsLead[] @relation("MbbsLeadUpdatedBy")
+
   roleId String
   role   Role   @relation(fields: [roleId], references: [id])
 
@@ -205,6 +211,12 @@ model Lead {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  createdById String?
+  updatedById String?
+
+  createdBy User? @relation("LeadCreatedBy", fields: [createdById], references: [id])
+  updatedBy User? @relation("LeadUpdatedBy", fields: [updatedById], references: [id])
+
   timelines LeadTimeline[]
 
   @@index([branchId])
@@ -259,7 +271,7 @@ model LeadTimeline {
 
   leadId String
 
-  lead Lead @relation(fields: [leadId], references: [id])
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   description  String
   nextFollowup DateTime?
@@ -350,6 +362,12 @@ model MbbsLead {
   status MbbsLeadStatus @default(new)
 
   nextFollowup DateTime?
+
+  createdById String?
+  updatedById String?
+
+  createdBy User? @relation("MbbsLeadCreatedBy", fields: [createdById], references: [id])
+  updatedBy User? @relation("MbbsLeadUpdatedBy", fields: [updatedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

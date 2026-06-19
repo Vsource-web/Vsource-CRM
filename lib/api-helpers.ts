@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { Prisma } from "@/generated/prisma/client";
+import { ApiError } from "./rbac";
 
 // ---------------------------------------------------------------------------
 // Generic response envelope
@@ -35,14 +36,14 @@ export function ok<T>(
   data: T,
   message?: string,
   meta?: PaginationMeta,
-  status = 200
+  status = 200,
 ): NextResponse<ApiResponse<T>> {
   return NextResponse.json({ success: true, data, message, meta }, { status });
 }
 
 export function created<T>(
   data: T,
-  message = "Created successfully"
+  message = "Created successfully",
 ): NextResponse<ApiResponse<T>> {
   return ok(data, message, undefined, 201);
 }
@@ -53,17 +54,18 @@ export function noContent(): NextResponse {
 
 export function badRequest(
   message = "Bad request",
-  errors?: string[]
-): NextResponse<ApiResponse> {
-  return NextResponse.json({ success: false, message, errors }, { status: 400 });
-}
-
-export function notFound(
-  resource = "Resource"
+  errors?: string[],
 ): NextResponse<ApiResponse> {
   return NextResponse.json(
+    { success: false, message, errors },
+    { status: 400 },
+  );
+}
+
+export function notFound(resource = "Resource"): NextResponse<ApiResponse> {
+  return NextResponse.json(
     { success: false, message: `${resource} not found` },
-    { status: 404 }
+    { status: 404 },
   );
 }
 
@@ -72,7 +74,7 @@ export function conflict(message = "Conflict"): NextResponse<ApiResponse> {
 }
 
 export function serverError(
-  message = "Internal server error"
+  message = "Internal server error",
 ): NextResponse<ApiResponse> {
   return NextResponse.json({ success: false, message }, { status: 500 });
 }
@@ -86,7 +88,9 @@ export function handleError(error: unknown): NextResponse<ApiResponse> {
   if (error instanceof ZodError) {
     return badRequest(
       "Validation failed",
-      error.issues.map((issue: any) => `${issue.path.join(".")}: ${issue.message}`)
+      error.issues.map(
+        (issue: any) => `${issue.path.join(".")}: ${issue.message}`,
+      ),
     );
   }
 
@@ -104,6 +108,18 @@ export function handleError(error: unknown): NextResponse<ApiResponse> {
     if (error.code === "P2003") {
       return badRequest("Related record not found (foreign key constraint)");
     }
+  }
+
+  if (error instanceof ApiError) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: error.message,
+      },
+      {
+        status: error.statusCode,
+      },
+    );
   }
 
   if (error instanceof Error) {
@@ -125,7 +141,7 @@ export function parsePagination(searchParams: URLSearchParams): {
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
   const limit = Math.min(
     100,
-    Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10))
+    Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10)),
   );
   return { skip: (page - 1) * limit, take: limit, page, limit };
 }
@@ -133,7 +149,7 @@ export function parsePagination(searchParams: URLSearchParams): {
 export function buildMeta(
   total: number,
   page: number,
-  limit: number
+  limit: number,
 ): PaginationMeta {
   return { total, page, limit, totalPages: Math.ceil(total / limit) };
 }

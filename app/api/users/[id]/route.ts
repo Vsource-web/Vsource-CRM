@@ -8,13 +8,10 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import db from "@/lib/prisma";
-import {
-  ok,
-  notFound,
-  noContent,
-  handleError,
-} from "@/lib/api-helpers";
+import { getAuthorizedUser } from "@/lib/rbac";
+import { ok, notFound, noContent, handleError } from "@/lib/api-helpers";
 import { UserUpdateSchema } from "@/lib/schemas";
+import { MODULES, PERMISSIONS } from "@/lib/module-codes";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -30,8 +27,13 @@ const USER_SELECT = {
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   try {
+    await getAuthorizedUser(_req, MODULES.USERS, PERMISSIONS.READ);
+
     const { id } = await params;
-    const user = await db.user.findUnique({ where: { id }, select: USER_SELECT });
+    const user = await db.user.findUnique({
+      where: { id },
+      select: USER_SELECT,
+    });
     if (!user) return notFound("User");
     return ok(user);
   } catch (err) {
@@ -41,9 +43,11 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
 export async function PUT(req: NextRequest, { params }: Ctx) {
   try {
+    await getAuthorizedUser(req, MODULES.USERS, PERMISSIONS.UPDATE);
+
     const { id } = await params;
     const { branchIds, password, ...rest } = UserUpdateSchema.parse(
-      await req.json()
+      await req.json(),
     );
 
     const data: Record<string, unknown> = { ...rest };
@@ -52,15 +56,21 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
       data.branches = { set: branchIds.map((bid) => ({ id: bid })) };
     }
 
-    const user = await db.user.update({ where: { id }, data, select: USER_SELECT });
+    const user = await db.user.update({
+      where: { id },
+      data,
+      select: USER_SELECT,
+    });
     return ok(user, "User updated successfully");
   } catch (err) {
     return handleError(err);
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: Ctx) {
+export async function DELETE(req: NextRequest, { params }: Ctx) {
   try {
+    await getAuthorizedUser(req, MODULES.USERS, PERMISSIONS.DELETE);
+
     const { id } = await params;
     await db.user.delete({ where: { id } });
     return noContent();

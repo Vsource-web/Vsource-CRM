@@ -100,6 +100,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     await db.lead.delete({ where: { id } });
     return noContent();
   } catch (err) {
+    console.log(err);
     return handleError(err);
   }
 }

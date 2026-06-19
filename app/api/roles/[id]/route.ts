@@ -15,11 +15,15 @@ import {
   handleError,
 } from "@/lib/api-helpers";
 import { RoleUpdateSchema } from "@/lib/schemas";
+import { getAuthorizedUser } from "@/lib/rbac";
+import { MODULES, PERMISSIONS } from "@/lib/module-codes";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   try {
+    await getAuthorizedUser(_req, MODULES.ROLES, PERMISSIONS.READ);
+
     const { id } = await params;
     const role = await db.role.findUnique({
       where: { id },
@@ -40,6 +44,8 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
 export async function PUT(req: NextRequest, { params }: Ctx) {
   try {
+    // await getAuthorizedUser(req, MODULES.ROLES, PERMISSIONS.UPDATE);
+
     const { id } = await params;
     const body = RoleUpdateSchema.parse(await req.json());
 
@@ -59,6 +65,8 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
   try {
+    await getAuthorizedUser(_req, MODULES.ROLES, PERMISSIONS.DELETE);
+
     const { id } = await params;
     const role = await db.role.findUnique({ where: { id } });
     if (!role) return notFound("Role");
