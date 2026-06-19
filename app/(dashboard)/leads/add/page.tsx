@@ -63,6 +63,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/store";
 
 const leadFormSchema = z.object({
   counsellingDate: z.string().optional(),
@@ -118,10 +119,12 @@ export default function AddLeadPage() {
 
   const [universityOpen, setUniversityOpen] = useState(false);
   const [universitySearch, setUniversitySearch] = useState("");
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
   const [intakes, setIntakes] = useState<Intake[]>([]);
   const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
+  const { user } = useAuth();
+
+  const branches = user?.branches ?? [];
 
   const { data: universities = [], isLoading: universitiesLoad } = useQuery({
     queryKey: ["universities"],
@@ -185,20 +188,7 @@ export default function AddLeadPage() {
       status: "draft",
     },
   });
-  useEffect(() => {
-    const loadBranches = async () => {
-      try {
-        const data = await getBranches();
 
-        setBranches(data);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load branches");
-      }
-    };
-
-    loadBranches();
-  }, []);
   useEffect(() => {
     const loadMasters = async () => {
       try {
@@ -219,6 +209,7 @@ export default function AddLeadPage() {
 
     loadMasters();
   }, []);
+
   const onSubmit = async (values: LeadFormValues, continueFlow = false) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`, {
@@ -297,7 +288,7 @@ export default function AddLeadPage() {
                             </SelectTrigger>
 
                             <SelectContent>
-                              {branches.map((branch) => (
+                              {branches.map((branch: Branch) => (
                                 <SelectItem key={branch.id} value={branch.id}>
                                   {branch.name}
                                 </SelectItem>

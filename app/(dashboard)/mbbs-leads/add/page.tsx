@@ -47,6 +47,7 @@ import {
   useLeadSources,
 } from "@/lib/master-settings";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/store";
 
 type DynamicOption = {
   id: string;
@@ -243,6 +244,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function MbbsForm() {
   const router = useRouter();
+  const { user } = useAuth();
+  const branches = user?.branches ?? [];
 
   const {
     register,
@@ -255,7 +258,6 @@ export default function MbbsForm() {
     defaultValues: getDefaultValues(),
   });
 
-  const { data: branches = [] } = useBranches();
   const { data: countries = [], isLoading: isCountriesLoading } =
     useCountries();
   const { data: intakes = [] } = useIntakes();

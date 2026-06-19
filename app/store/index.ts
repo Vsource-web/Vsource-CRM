@@ -5,6 +5,7 @@ import { authService } from "@/services/auth.service";
 import { Role } from "@/rbac/types";
 import { hasPermission } from "@/hooks/hasPermission";
 import { User } from "@/users/types/user";
+import { Branch } from "@/lib/branches";
 
 export type ModuleCode =
   | "MASTER_LEADS"
@@ -20,6 +21,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: Role;
+  branches?: Branch[];
 }
 
 interface AuthState {
