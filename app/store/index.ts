@@ -26,13 +26,19 @@ export interface AuthUser {
 
 interface AuthState {
   user: AuthUser | null;
+
   isAuthenticated: boolean;
-  isLoading: boolean;
+
+  isHydrating: boolean;
 
   login: (
     email: string,
     password: string,
-  ) => Promise<{ ok: boolean; error?: string; user: User | null }>;
+  ) => Promise<{
+    ok: boolean;
+    error?: string;
+    user: User | null;
+  }>;
 
   logout: () => Promise<void>;
 
@@ -47,24 +53,19 @@ interface AuthState {
 export const useAuth = create<AuthState>()((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isHydrating: true,
 
   login: async (email, password) => {
     try {
-      set({ isLoading: true });
-
       const data = await authService.login(email, password);
 
       set({
         user: data.user,
         isAuthenticated: true,
-        isLoading: false,
       });
 
       return { ok: true, user: data.user };
     } catch (error: any) {
-      set({ isLoading: false });
-
       return {
         ok: false,
         error: error?.message ?? "Login failed",
@@ -75,8 +76,6 @@ export const useAuth = create<AuthState>()((set, get) => ({
 
   logout: async () => {
     try {
-      set({ isLoading: true });
-
       await authService.logout();
     } catch (error) {
       console.error(error);
@@ -85,7 +84,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
     set({
       user: null,
       isAuthenticated: false,
-      isLoading: false,
+      isHydrating: false,
     });
   },
 
@@ -114,7 +113,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
   },
 
   hydrateUser: async () => {
-    set({ isLoading: true });
+    set({ isHydrating: true });
 
     try {
       const user = await authService.me();
@@ -123,7 +122,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
         set({
           user: null,
           isAuthenticated: false,
-          isLoading: false,
+          isHydrating: false,
         });
 
         return;
@@ -132,13 +131,13 @@ export const useAuth = create<AuthState>()((set, get) => ({
       set({
         user,
         isAuthenticated: true,
-        isLoading: false,
+        isHydrating: false,
       });
     } catch {
       set({
         user: null,
         isAuthenticated: false,
-        isLoading: false,
+        isHydrating: false,
       });
     }
   },
