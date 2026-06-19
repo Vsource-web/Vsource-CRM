@@ -127,7 +127,7 @@ export default function AddLeadPage() {
     queryKey: ["universities"],
     queryFn: async () => {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/lead-universities`,
+        `${process.env.NEXT_PUBLIC_API_URL}/lead-universities?status=true`,
         {
           withCredentials: true,
         },
@@ -137,7 +137,7 @@ export default function AddLeadPage() {
   });
   const createUniversity = async (name: string) => {
     const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/lead-universities`,
+      `${process.env.NEXT_PUBLIC_API_URL}/lead-universities?status=true`,
       {
         name,
       },
@@ -156,7 +156,7 @@ export default function AddLeadPage() {
     queryKey: ["courses"],
     queryFn: async () => {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/lead-degrees`,
+        `${process.env.NEXT_PUBLIC_API_URL}/lead-degrees?status=true`,
         {
           withCredentials: true,
         },
