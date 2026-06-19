@@ -59,7 +59,9 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         include: {
           branch: { select: { id: true, name: true, code: true } },
-          assignedCounselor: { select: { id: true, name: true, email: true } },
+          counselors: {
+            select: { counselor: { select: { name: true, id: true } } },
+          },
           _count: { select: { timelines: true } },
         },
       }),
@@ -76,19 +78,22 @@ export async function POST(req: NextRequest) {
   try {
     const body = MbbsLeadCreateSchema.parse(await req.json());
     const lastLead = await db.mbbsLead.findFirst({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       select: { leadNumber: true },
     });
     let nextNumber = 1;
 
     if (lastLead?.leadNumber) {
-      const currentNumber = parseInt(lastLead.leadNumber.replace('MLD', ''), 10);
+      const currentNumber = parseInt(
+        lastLead.leadNumber.replace("MLD", ""),
+        10,
+      );
       if (!isNaN(currentNumber)) {
         nextNumber = currentNumber + 1;
       }
     }
 
-    body.leadNumber = `MLD${String(nextNumber).padStart(4, '0')}`;
+    body.leadNumber = `MLD${String(nextNumber).padStart(4, "0")}`;
     const lead = await db.mbbsLead.create({
       data: body as any,
       include: {

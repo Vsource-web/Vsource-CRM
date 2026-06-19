@@ -19,7 +19,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
       where: { id },
       include: {
         branch: true,
-        assignedCounselor: { select: { id: true, name: true, email: true } },
+        counselors: {
+          select: { counselor: { select: { name: true, id: true } } },
+        },
         timelines: {
           include: {
             createdBy: { select: { id: true, name: true } },
@@ -36,18 +38,59 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   }
 }
 
-export async function PUT(req: NextRequest, { params }: Ctx) {
+export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
     const { id } = await params;
+
     const body = MbbsLeadUpdateSchema.parse(await req.json());
-    const lead = await db.mbbsLead.update({
-      where: { id },
-      data: body,
-      include: {
-        branch: { select: { id: true, name: true } },
-        assignedCounselor: { select: { id: true, name: true } },
-      },
+
+    const { counselorIds, ...mbbsLeadData } = body;
+
+    const lead = await db.$transaction(async (tx) => {
+      await tx.mbbsLead.update({
+        where: { id },
+        data: mbbsLeadData,
+      });
+
+      if (counselorIds) {
+        await tx.mbbsLeadCounselor.deleteMany({
+          where: {
+            mbbsLeadId: id,
+          },
+        });
+
+        await tx.mbbsLeadCounselor.createMany({
+          data: counselorIds.map((counselorId, index) => ({
+            mbbsLeadId: id,
+            counselorId,
+            isPrimary: index === 0,
+          })),
+        });
+      }
+
+      return tx.mbbsLead.findUnique({
+        where: { id },
+        include: {
+          branch: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          counselors: {
+            include: {
+              counselor: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
     });
+
     return ok(lead, "MBBS Lead updated successfully");
   } catch (err) {
     return handleError(err);

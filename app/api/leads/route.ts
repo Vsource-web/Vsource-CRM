@@ -15,9 +15,13 @@ import {
 } from "@/lib/api-helpers";
 import { LeadCreateSchema } from "@/lib/schemas";
 import { LeadStatus, LeadType } from "@/generated/prisma/enums";
+import { getAuthorizedUser } from "@/lib/rbac";
+import { MODULES, PERMISSIONS } from "@/lib/module-codes";
 
 export async function GET(req: NextRequest) {
   try {
+    await getAuthorizedUser(req, MODULES.MASTER_LEADS, PERMISSIONS.READ);
+
     const sp = req.nextUrl.searchParams;
     const { skip, take, page, limit } = parsePagination(sp);
 
@@ -67,6 +71,9 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         include: {
           branch: { select: { id: true, name: true, code: true } },
+          counselors: {
+            select: { counselor: { select: { name: true, id: true } } },
+          },
           _count: { select: { timelines: true } },
         },
       }),
@@ -81,6 +88,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const currentUser = await getAuthorizedUser(
+      req,
+      MODULES.MASTER_LEADS,
+      PERMISSIONS.CREATE,
+    );
+
+    console.log("currentUser", currentUser);
+
     const body = LeadCreateSchema.parse(await req.json());
     const lastLead = await db.lead.findFirst({
       orderBy: {
@@ -90,7 +105,6 @@ export async function POST(req: NextRequest) {
         leadNumber: true,
       },
     });
-    console.log(body);
     let nextNumber = 1;
 
     if (lastLead?.leadNumber) {
@@ -101,13 +115,17 @@ export async function POST(req: NextRequest) {
     }
 
     body.leadNumber = `LD${String(nextNumber).padStart(4, "0")}`;
+
     const lead = await db.lead.create({
-      data: body as any,
-      include: {
-        branch: { select: { id: true, name: true } },
-        assignedCounselor: { select: { id: true, name: true } },
+      data: {
+        ...body,
+
+        leadNumber: body.leadNumber!,
+        createdById: currentUser.id,
+        updatedById: currentUser.id,
       },
     });
+
     return created(lead, "Lead created successfully");
   } catch (err) {
     return handleError(err);

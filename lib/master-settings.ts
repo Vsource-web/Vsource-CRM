@@ -1,4 +1,5 @@
 // crm-frontend-next\app\lib\master-settings.ts
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -77,4 +78,28 @@ export const deleteMaster = async (endpoint: string, id: string) => {
   });
 
   return data?.data || [];
+};
+
+export const useCountries = () => {
+  return useQuery({
+    queryKey: ["countries"],
+    queryFn: getCountries,
+    staleTime: 0,
+  });
+};
+
+export const useIntakes = () => {
+  return useQuery({
+    queryKey: ["intakes"],
+    queryFn: getIntakes,
+    staleTime: 0,
+  });
+};
+
+export const useLeadSources = () => {
+  return useQuery({
+    queryKey: ["lead-sources"],
+    queryFn: getLeadSources,
+    staleTime: 0,
+  });
 };

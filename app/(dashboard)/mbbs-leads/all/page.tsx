@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Search, Download, Plus, Pencil, Trash2, Eye } from "lucide-react";
-import type { MbbsLeadStatus } from "@/types";
+import type { LeadStatus, MbbsLeadStatus } from "@/types";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
@@ -90,12 +90,13 @@ interface MbbsLeadRecord {
     name: string;
   };
 
-  assignedCounselor?: {
-    id: string;
-    name: string;
-  };
-
-  assignedCounselorId?: string;
+  counselors?: {
+    isPrimary: boolean;
+    counselor: {
+      id: string;
+      name: string;
+    };
+  }[];
 
   status: MbbsLeadStatus;
 
@@ -136,9 +137,10 @@ export default function AllLeadsPage() {
   const [intakes, setIntakes] = useState<Intake[]>([]);
   const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
   // Modals & Action States
-  const [selected, setSelected] = useState<MbbsLeadStatus | null>(null);
-  const [editingLead, setEditingLead] = useState<MbbsLeadStatus | null>(null);
+  const [selected, setSelected] = useState<MbbsLeadRecord | null>(null);
+  const [editingLead, setEditingLead] = useState<MbbsLeadRecord | null>(null);
   const [leadIdToDelete, setLeadIdToDelete] = useState<string | null>(null);
+  const [selectedCounselors, setSelectedCounselors] = useState<string[]>([]);
 
   const [leads, setLeads] = useState<MbbsLeadRecord[]>([]);
 
@@ -224,7 +226,8 @@ export default function AllLeadsPage() {
         cache: "no-store",
         credentials: "include",
       });
-      const data = await response.json();
+      const res = await response.json();
+      const data = res?.data || [];
       setLeads(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(error);
@@ -272,7 +275,10 @@ export default function AllLeadsPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editingLead),
+        body: JSON.stringify({
+          ...editingLead,
+          counselorIds: selectedCounselors,
+        }),
       });
 
       setLeads((current) =>
@@ -510,7 +516,20 @@ export default function AllLeadsPage() {
                           <p className="text-muted-foreground uppercase text-[10px]">
                             Counselor
                           </p>
-                          <p>{lead.assignedCounselor?.name || "—"}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {lead?.counselors?.length ? (
+                              lead?.counselors.map((coun, idx) => (
+                                <Badge key={coun.counselor?.id || idx}>
+                                  {coun?.counselor?.name}
+                                  {coun.isPrimary && " (Primary)"}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                No counselors assigned
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="col-span-2">
@@ -652,7 +671,20 @@ export default function AllLeadsPage() {
                             {lead.branch?.name || "—"}
                           </td>
                           <td className="px-4 py-3.5 align-middle whitespace-nowrap">
-                            {lead.assignedCounselor?.name || "—"}
+                            <div className="flex flex-wrap gap-2">
+                              {lead?.counselors?.length ? (
+                                lead?.counselors.map((coun, idx) => (
+                                  <Badge key={coun.counselor?.id || idx}>
+                                    {coun?.counselor?.name}
+                                    {coun.isPrimary && " (Primary)"}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  No counselors assigned
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3.5 align-middle whitespace-nowrap">
                             {lead.preferredCountry || "—"}
@@ -660,8 +692,9 @@ export default function AllLeadsPage() {
                           <td className="px-4 py-3.5 align-middle">
                             <Badge
                               variant="outline"
-                              className={`capitalize tracking-wide font-semibold whitespace-nowrap ${statusStyle[lead.status || "draft"]
-                                }`}
+                              className={`capitalize tracking-wide font-semibold whitespace-nowrap ${
+                                statusStyle[lead.status || "draft"]
+                              }`}
                             >
                               {lead.status}
                             </Badge>
@@ -769,6 +802,8 @@ export default function AllLeadsPage() {
         executeDeleteLead={executeDeleteLead}
         branchOptions={branchOptions}
         statusStyle={statusStyle}
+        selectedCounselors={selectedCounselors}
+        setSelectedCounselors={setSelectedCounselors}
       />
     </PageTransition>
   );

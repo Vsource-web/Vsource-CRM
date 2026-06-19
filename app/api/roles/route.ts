@@ -14,9 +14,13 @@ import {
   buildMeta,
 } from "@/lib/api-helpers";
 import { RoleCreateSchema } from "@/lib/schemas";
+import { getAuthorizedUser } from "@/lib/rbac";
+import { MODULES, PERMISSIONS } from "@/lib/module-codes";
 
 export async function GET(req: NextRequest) {
   try {
+    await getAuthorizedUser(req, MODULES.ROLES, PERMISSIONS.READ);
+
     const sp = req.nextUrl.searchParams;
     const { skip, take, page, limit } = parsePagination(sp);
     const search = sp.get("search") ?? undefined;
@@ -47,6 +51,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // await getAuthorizedUser(req, MODULES.ROLES, PERMISSIONS.CREATE);
+
     const body = RoleCreateSchema.parse(await req.json());
     const role = await db.role.create({ data: body });
     return created(role, "Role created successfully");
