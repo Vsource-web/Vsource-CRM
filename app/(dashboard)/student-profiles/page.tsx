@@ -95,7 +95,7 @@ export default function Home() {
   const [selectedCourseId, setSelectedCourseId] = useState("");
 
   const { data: universities, isLoading: isUniversitiesLoad } =
-    useUniversityDropdown();
+    useUniversityDropdown(selectedStudentId ? selectedStudentId : "");
   const { data: courses, isLoading: isCourseLoad } =
     useCourseDropdown(selectedUniversityId);
 
@@ -571,7 +571,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col lg:items-end gap-1">
+                  {/* <div className="flex flex-col lg:items-end gap-1">
                     <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">
                       Embassy Pipeline Node
                     </span>
@@ -581,7 +581,7 @@ export default function Home() {
                     <span className="text-[10px] text-slate-400 font-mono">
                       Passport Registration: {selectedStudent.passportNumber}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div
@@ -731,7 +731,7 @@ export default function Home() {
                             {[
                               {
                                 label: "Student Identification ID",
-                                val: `STU${100 + Number(selectedStudent?.studentName)}`,
+                                val: selectedStudent?.studentName,
                                 icon: User,
                               },
                               {
@@ -741,7 +741,11 @@ export default function Home() {
                               },
                               {
                                 label: "Admission Enrollment Date",
-                                val: selectedStudent.admissionDate,
+                                val: selectedStudent.admissionDate
+                                  ? new Date(
+                                      selectedStudent.admissionDate,
+                                    )?.toLocaleDateString("en-IN")
+                                  : "-",
                                 icon: Calendar,
                               },
                               {
@@ -784,8 +788,8 @@ export default function Home() {
                             ].map((v, i) => {
                               const ItemIcon = v.icon;
                               const value =
-                                v.val instanceof Date
-                                  ? v.val.toLocaleDateString()
+                                (v.val as any) instanceof Date
+                                  ? v.val && v.val.toLocaleString()
                                   : v.val;
                               return (
                                 <div
@@ -868,7 +872,7 @@ export default function Home() {
                                 className="bg-red-600 hover:bg-red-700 text-white text-xs font-black px-4.5 py-2 rounded-xl inline-flex items-center gap-1 cursor-pointer"
                               >
                                 <Plus className="h-4.5 w-4.5" />
-                                <span>Add New Course Program</span>
+                                <span>Add Course </span>
                               </button>
                             </div>
                           </div>
@@ -904,14 +908,20 @@ export default function Home() {
                                   >
                                     <option value="">Select University</option>
 
-                                    {universities.map((university: any) => (
-                                      <option
-                                        key={university.id}
-                                        value={university.id}
-                                      >
-                                        {university.name}
+                                    {isUniversitiesLoad ? (
+                                      <option value="option">
+                                        Universities Loading...
                                       </option>
-                                    ))}
+                                    ) : (
+                                      universities?.map((university: any) => (
+                                        <option
+                                          key={university.id}
+                                          value={university.id}
+                                        >
+                                          {university.name}
+                                        </option>
+                                      ))
+                                    )}
                                   </select>
                                 </div>
 
@@ -934,11 +944,20 @@ export default function Home() {
                                   >
                                     <option value="">Select Course</option>
 
-                                    {courses.map((course: any) => (
-                                      <option key={course.id} value={course.id}>
-                                        {course.name}
+                                    {isCourseLoad ? (
+                                      <option value="option">
+                                        Universities Loading...
                                       </option>
-                                    ))}
+                                    ) : (
+                                      courses?.map((course: any) => (
+                                        <option
+                                          key={course.id}
+                                          value={course.id}
+                                        >
+                                          {course.name}
+                                        </option>
+                                      ))
+                                    )}
                                   </select>
                                 </div>
 
@@ -1355,7 +1374,7 @@ export default function Home() {
                                 type="submit"
                                 className="bg-red-655 bg-red-600 hover:bg-red-700 text-white text-xs font-black px-6 py-2.5 rounded-xl uppercase tracking-wider shadow"
                               >
-                                Save Financial Parameters
+                                Save
                               </button>
                             </div>
                           </form>

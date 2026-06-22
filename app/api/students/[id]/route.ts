@@ -96,24 +96,22 @@ export async function PATCH(
         });
       }
 
-      if (body.applications && body.applications.length > 0) {
-        for (const app of body.applications) {
-          await tx.studentApplication.update({
-            where: {
-              id: app.id,
-            },
-            data: {
-              portal: app.portal,
-              universityName: app.universityName,
-              courseName: app.courseName,
-              applicationDate: app.applicationDate
-                ? new Date(app.applicationDate)
-                : null,
-              status: app.status,
-            },
-          });
-        }
-      }
+      // if (body.applications && body.applications.length > 0) {
+      //   for (const app of body.applications) {
+      //     await tx.studentApplication.update({
+      //       where: {
+      //         id: app.id,
+      //       },
+      //       data: {
+      //         portal: app.portal,
+      //         applicationDate: app.applicationDate
+      //           ? new Date(app.applicationDate)
+      //           : null,
+      //         status: app.status,
+      //       },
+      //     });
+      //   }
+      // }
 
       return student;
     });
