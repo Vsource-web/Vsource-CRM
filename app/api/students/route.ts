@@ -124,6 +124,17 @@ export async function GET(req: NextRequest) {
         },
 
         applications: {
+          select: {
+            university: {
+              select: { id: true, name: true },
+            },
+            course: {
+              select: { id: true, name: true },
+            },
+            applicationDate: true,
+            status: true,
+            portal: true,
+          },
           orderBy: {
             createdAt: "desc",
           },
