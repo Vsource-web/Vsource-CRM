@@ -43,7 +43,7 @@ export async function POST(
           ? new Date(body.universityStartDate)
           : null,
 
-        fintechAssignee: body.fintechAssignee,
+        fintechAssigneeId: body.fintechAssigneeId,
 
         nbfc: body.nbfc,
 
@@ -83,7 +83,7 @@ export async function POST(
           ? new Date(body.universityStartDate)
           : null,
 
-        fintechAssignee: body.fintechAssignee,
+        fintechAssigneeId: body.fintechAssigneeId,
 
         nbfc: body.nbfc,
 
@@ -117,6 +117,13 @@ export async function GET(
     const profile = await db.studentVisaLoanProfile.findUnique({
       where: {
         studentId,
+      },
+      include: {
+        fintechAssignee: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 

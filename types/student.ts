@@ -151,7 +151,12 @@ export type StudentVisaLoanProfile = {
   casStatus?: string | null;
   visaStatus?: string | null;
   universityStartDate?: string | null;
-  fintechAssignee?: string | null;
+  fintechAssigneeId?: string | null;
+
+  fintechAssignee?: {
+    id: string;
+    name: string;
+  } | null;
   nbfc?: string | null;
   loanStatus?: string | null;
   pfStatus?: string | null;
@@ -172,7 +177,7 @@ export type StudentVisaLoanProfilePayload = {
   casStatus: string | null;
   visaStatus: string | null;
   universityStartDate: string | null;
-  fintechAssignee: string | null;
+  fintechAssigneeId: string | null;
   nbfc: string | null;
   loanStatus: string | null;
   pfStatus: string | null;
