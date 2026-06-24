@@ -244,7 +244,7 @@ export default function Home() {
     setSelectedUniversityId(app.universityId);
     setSelectedCourseId(app.courseId);
     setAppIntake("Sep 2026");
-    setAppStatus(app.status);
+    setAppStatus(app?.status);
     setShowAddAppForm(true);
   };
 
@@ -710,7 +710,7 @@ export default function Home() {
                                         {app.portal}
                                       </span>
                                       <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-[9px] py-0.5 px-2 rounded-md">
-                                        {app.status}
+                                        {app?.status}
                                       </span>
                                     </div>
                                     <h5 className="font-extrabold text-sm mb-1">
@@ -800,7 +800,7 @@ export default function Home() {
                                       </td>
                                       <td className="px-4 py-3">
                                         <span className="bg-slate-100 dark:bg-slate-850 text-[10px] font-black px-2 py-0.5 rounded">
-                                          {app.status}
+                                          {app?.status}
                                         </span>
                                       </td>
                                       <td className="px-4 py-3 text-right space-x-1.5">

@@ -316,15 +316,15 @@ export function StudentTable({
                     {/* 14. Application Status overall */}
                     <td className="px-4 py-3.5 text-center">
                       <span
-                        className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border ${getCellColorClass(firstApp.status)}`}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border ${getCellColorClass(applicationStatus)}`}
                       >
-                        {firstApp.status}
+                        {applicationStatus}
                       </span>
                     </td>
 
                     {/* 15. Portal */}
                     <td className="px-4 py-3.5 font-mono font-bold text-[10px] text-red-650 bg-red-600/5 px-2 py-0.5 rounded">
-                      {firstApp.portal}
+                      {firstApp?.portal ?? ""}
                     </td>
 
                     {/* 16. Application Date */}
@@ -360,9 +360,9 @@ export function StudentTable({
                     {/* 20. Offer Status */}
                     <td className="px-4 py-3.5 text-center">
                       <span
-                        className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border ${getCellColorClass(firstApp.status)}`}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border ${getCellColorClass(applicationStatus)}`}
                       >
-                        {firstApp.status}
+                        {applicationStatus}
                       </span>
                     </td>
 
