@@ -1,13 +1,21 @@
 import { NextRequest } from "next/server";
-import  db  from "@/lib/prisma";
+import db from "@/lib/prisma";
 import { handleError, ok } from "@/lib/api-helpers";
 import { Prisma } from "@/generated/prisma/client";
+import { getAuthorizedUser } from "@/lib/rbac";
+import { MODULES, PERMISSIONS } from "@/lib/module-codes";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const currentUser = await getAuthorizedUser(
+      req,
+      MODULES.MASTER_LEADS,
+      PERMISSIONS.CREATE,
+    );
+
     const { id } = await params;
 
     const body = await req.json();
@@ -27,58 +35,59 @@ export async function PATCH(
       throw new Error("Lead not found");
     }
 
-    const result = await db.$transaction(async (tx: Prisma.TransactionClient) => {
-      const updatedLead = await tx.lead.update({
-        where: { id },
-        data: {
-          status: body.status,
-          ...(body.status === "converted"
-            ? {
-                isConverted: true,
-                convertedAt: new Date(),
-              }
-            : {}),
-        },
-      });
+    const counselorId =
+      currentUser?.role?.name === "Counsellor" ? currentUser.id : null;
 
-      if (body.status === "converted") {
-        const existingStudent = await tx.student.findUnique({
-          where: {
-            leadId: lead.id,
+    const result = await db.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const updatedLead = await tx.lead.update({
+          where: { id },
+          data: {
+            status: body.status,
+            ...(body.status === "converted"
+              ? {
+                  isConverted: true,
+                  convertedAt: new Date(),
+                }
+              : {}),
           },
         });
 
-        if (!existingStudent) {
-
-          await tx.student.create({
-            data: {
-
+        if (body.status === "converted") {
+          const existingStudent = await tx.student.findUnique({
+            where: {
               leadId: lead.id,
-
-              branchId: lead.branchId,
-
-              counselorId:
-                lead.counselors.find((c: any) => c.isPrimary)
-                  ?.counselorId ?? null,
-
-              studentName: lead.studentName ?? "",
-
-              mobileNumber: lead.mobileNumber ?? "",
-
-              emailId: lead.emailId ?? "",
             },
           });
-        }
-      }
 
-      return updatedLead;
-    });
+          if (!existingStudent) {
+            await tx.student.create({
+              data: {
+                leadId: lead.id,
+
+                branchId: lead.branchId,
+
+                counselorId,
+
+                studentName: lead.studentName ?? "",
+
+                mobileNumber: lead.mobileNumber ?? "",
+
+                emailId: lead.emailId ?? "",
+              },
+            });
+          }
+        }
+
+        return updatedLead;
+      },
+    );
 
     return ok(
       result,
       body.status === "converted"
         ? "Lead converted successfully"
-        : "Lead status updated successfully"
+        : "Lead status updated successfully",
     );
   } catch (err) {
     return handleError(err);

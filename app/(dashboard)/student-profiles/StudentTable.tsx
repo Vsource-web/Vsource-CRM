@@ -167,7 +167,7 @@ export function StudentTable({
     <div className="space-y-4" id="student-module-master-table">
       <div className="relative max-h-[70vh] overflow-auto rounded-3xl border border-slate-200/85 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <table className="relative w-full border-collapse text-left text-xs">
-          <thead className="sticky top-0 z-30 select-none whitespace-nowrap border-b text-[10px] font-black uppercase tracking-wider">
+          <thead className="sticky top-0  select-none whitespace-nowrap border-b text-[10px] font-black uppercase tracking-wider">
             <tr>
               <th
                 className={`sticky left-0 top-0 z-[40] w-12 border-r px-3 py-3 text-center shadow-[2px_0_5px_rgba(0,0,0,0.05)] ${thBgClass}`}
@@ -387,7 +387,7 @@ export function StudentTable({
 
                     <td className="px-4 py-3.5 font-mono text-[11px] font-medium text-slate-600 dark:text-slate-400">
                       {getText(
-                        visaLoanProfile?.fintechAssignee,
+                        visaLoanProfile?.fintechAssignee?.name,
                         "Not assigned",
                       )}
                     </td>

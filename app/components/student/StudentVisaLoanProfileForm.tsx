@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import { useStudentVisaLoanProfile } from "@/hooks/student/visa-loan/useStudentVisaLoanProfile";
 import { useSaveStudentVisaLoanProfile } from "@/hooks/student/visa-loan/useSaveStudentVisaLoanProfile";
+import { useFintechUsers } from "@/hooks/student/visa-loan/useFintechUsers";
 
 type StudentVisaLoanProfileSectionProps = {
   studentId: string;
@@ -44,7 +45,7 @@ type FormState = {
   casStatus: string;
   visaStatus: string;
   universityStartDate: string;
-  fintechAssignee: string;
+  fintechAssigneeId: string;
   nbfc: string;
   loanStatus: string;
   pfStatus: string;
@@ -63,7 +64,7 @@ const initialFormState: FormState = {
   casStatus: "",
   visaStatus: "",
   universityStartDate: "",
-  fintechAssignee: "",
+  fintechAssigneeId: "",
   nbfc: "",
   loanStatus: "",
   pfStatus: "",
@@ -164,7 +165,7 @@ const createFormState = (
     casStatus: profile.casStatus ?? "",
     visaStatus: profile.visaStatus ?? "",
     universityStartDate: getDateTimeLocalValue(profile.universityStartDate),
-    fintechAssignee: profile.fintechAssignee ?? "",
+    fintechAssigneeId: profile.fintechAssigneeId ?? "",
     nbfc: profile.nbfc ?? "",
     loanStatus: profile.loanStatus ?? "",
     pfStatus: profile.pfStatus ?? "",
@@ -214,6 +215,7 @@ export function StudentVisaLoanProfileSection({
 }: StudentVisaLoanProfileSectionProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<FormState>(initialFormState);
+  const { data: fintechUsers = [] } = useFintechUsers(studentId);
 
   const {
     data: profile,
@@ -302,7 +304,7 @@ export function StudentVisaLoanProfileSection({
       casStatus: form.casStatus || null,
       visaStatus: form.visaStatus || null,
       universityStartDate: getNullableDateTime(form.universityStartDate),
-      fintechAssignee: form.fintechAssignee.trim() || null,
+      fintechAssigneeId: form.fintechAssigneeId.trim() || null,
       nbfc: form.nbfc || null,
       loanStatus: form.loanStatus || null,
       pfStatus: form.pfStatus || null,
@@ -311,6 +313,8 @@ export function StudentVisaLoanProfileSection({
       disbursed: form.disbursed,
       disbursedAmount: form.disbursed ? disbursedAmount : null,
     };
+
+    console.log(payload);
 
     try {
       await saveMutation.mutateAsync({
@@ -540,7 +544,7 @@ export function StudentVisaLoanProfileSection({
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <DetailItem
                   label="Fintech Assignee"
-                  value={profile.fintechAssignee || "-"}
+                  value={profile.fintechAssignee?.name || "-"}
                   icon={UserRound}
                   isDarkMode={isDarkMode}
                 />
@@ -833,15 +837,21 @@ export function StudentVisaLoanProfileSection({
                     Fintech Assignee
                   </label>
 
-                  <input
-                    type="text"
-                    value={form.fintechAssignee}
+                  <select
+                    value={form.fintechAssigneeId}
                     onChange={(event) =>
-                      updateField("fintechAssignee", event.target.value)
+                      updateField("fintechAssigneeId", event.target.value)
                     }
-                    placeholder="Enter fintech assignee"
                     className={inputClassName}
-                  />
+                  >
+                    <option value="">Select Fintech Assignee</option>
+
+                    {fintechUsers.map((user: { id: string; name: string }) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

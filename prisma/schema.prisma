@@ -43,6 +43,8 @@ model User {
   mbbsLeadsCreated MbbsLead[] @relation("MbbsLeadCreatedBy")
   mbbsLeadsUpdated MbbsLead[] @relation("MbbsLeadUpdatedBy")
 
+  fintechAssignedStudents StudentVisaLoanProfile[] @relation("FintechAssignedStudents")
+
   roleId String
   role   Role   @relation(fields: [roleId], references: [id])
 
@@ -144,7 +146,7 @@ model Lead {
   studentName String?
   fatherName  String?
 
-  mobileNumber String?
+  mobileNumber String? @unique
   emailId      String?
 
   place    String?
@@ -316,7 +318,7 @@ model MbbsLead {
   studentName String?
   fatherName  String?
 
-  mobileNumber String?
+  mobileNumber String? @unique
   emailId      String?
 
   address String?
@@ -546,8 +548,11 @@ model StudentVisaLoanProfile {
   visaStatus          String?
   universityStartDate DateTime?
 
-  fintechAssignee String?
-  nbfc            String?
+  fintechAssigneeId String?
+
+  fintechAssignee User? @relation("FintechAssignedStudents", fields: [fintechAssigneeId], references: [id])
+
+  nbfc String?
 
   loanStatus String?
   pfStatus   String?
@@ -566,6 +571,7 @@ model StudentVisaLoanProfile {
   @@index([casStatus])
   @@index([visaStatus])
   @@index([loanStatus])
+  @@index([fintechAssigneeId])
 }
 
 model StudentRemark {
