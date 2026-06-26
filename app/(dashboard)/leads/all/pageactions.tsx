@@ -980,6 +980,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.tenthPercentage ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1010,6 +1011,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.twelfthPercentage ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1180,6 +1182,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.bachelorsPercentage ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1267,6 +1270,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.listeningScore ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1282,6 +1286,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.readingScore ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1297,6 +1302,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.writingScore ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1312,6 +1318,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.speakingScore ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1330,6 +1337,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.greGmatScore ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1345,6 +1353,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.quantitativeScore ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1360,6 +1369,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.verbalScore ?? ""}
                       onChange={(e) =>
                         setEditingLead({
@@ -1375,6 +1385,7 @@ export default function PageActions(props: PageActionsProps) {
                     <Input
                       type="number"
                       min={0}
+                      step="0.01"
                       value={editingLead.analyticalWritingScore ?? ""}
                       onChange={(e) =>
                         setEditingLead({
