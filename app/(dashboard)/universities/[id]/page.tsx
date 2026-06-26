@@ -25,6 +25,7 @@ import {
   Pencil,
   Trophy,
   Trash2,
+  IndianRupee,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -378,7 +379,7 @@ export default function UniversityDetailsPage() {
               />
 
               <MetricCard
-                icon={<DollarSign />}
+                icon={<IndianRupee />}
                 label="Application Fee"
                 value={applicationFee}
               />
@@ -724,7 +725,7 @@ function CourseCard({
         />
 
         <DetailRow
-          icon={<DollarSign />}
+          icon={<IndianRupee />}
           label="Annual Tuition"
           value={formatCurrency(
             course.annualTuitionFee,

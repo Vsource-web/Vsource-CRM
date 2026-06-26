@@ -464,15 +464,13 @@ enum ApplicationStatus {
 
   applied
 
+  pending
+
   under_review
 
-  conditional_offer
-
-  unconditional_offer
+  conditional
 
   rejected
-
-  withdrawn
 }
 
 enum OfferStatus {

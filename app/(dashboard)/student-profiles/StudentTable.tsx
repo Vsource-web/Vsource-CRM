@@ -21,7 +21,7 @@ export function StudentTable({
   const [visiblePasswords, setVisiblePasswords] = useState<
     Record<string, boolean>
   >({});
-const router = useRouter();
+  const router = useRouter();
   const { data, isLoading, isError, error } = useStudents();
 
   const students = Array.isArray(data?.data) ? data.data : [];
@@ -229,7 +229,7 @@ const router = useRouter();
             {students.length === 0 ? (
               <tr>
                 <td
-                  colSpan={34}
+                  colSpan={5}
                   className="bg-white py-12 text-center text-xs font-bold text-slate-400 dark:bg-slate-900"
                 >
                   No students found.
