@@ -35,6 +35,7 @@ import type {
   StudentDocumentChecklistItem,
   StudentDocumentRecord,
 } from "@/types/student";
+import { CATEGORY_LABELS } from "@/lib/student-document-checklist";
 
 type DMSSectionProps = {
   studentId: string;
@@ -44,6 +45,73 @@ type DMSSectionProps = {
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_TYPES = ".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx";
+
+const DOCUMENT_TABS = [
+  {
+    key: "ACADEMIC",
+    label: "Educational",
+  },
+  {
+    key: "PERSONAL",
+    label: "Personal",
+  },
+  {
+    key: "TEST_SCORE",
+    label: "Test Scores",
+  },
+  {
+    key: "APPLICATION",
+    label: "Application",
+  },
+  {
+    key: "UNIVERSITY",
+    label: "University",
+  },
+  {
+    key: "LOAN",
+    label: "Financial / Loan",
+  },
+  {
+    key: "VISA",
+    label: "Visa",
+  },
+] as const;
+
+type DocumentTabKey = (typeof DOCUMENT_TABS)[number]["key"];
+
+function getDocumentTab(
+  category: StudentDocumentChecklistItem["category"],
+): DocumentTabKey {
+  switch (category) {
+    case "ACADEMIC":
+      return "ACADEMIC";
+
+    case "PERSONAL":
+      return "PERSONAL";
+
+    case "TEST_SCORE":
+      return "TEST_SCORE";
+
+    case "APPLICATION":
+      return "APPLICATION";
+
+    case "UNIVERSITY":
+      return "UNIVERSITY";
+
+    case "LOAN_COLLATERAL":
+    case "LOAN_STUDENT":
+    case "LOAN_PARENT":
+      return "LOAN";
+
+    case "VISA":
+      return "VISA";
+
+    default: {
+      const exhaustiveCheck: never = category;
+      return exhaustiveCheck;
+    }
+  }
+}
 
 function formatBytes(bytes?: number | null) {
   if (!bytes || bytes <= 0) return "Unknown size";
@@ -103,6 +171,9 @@ export function DMSSection({ studentId, studentName }: DMSSectionProps) {
   const updateMutation = useUpdateStudentDocument(studentId);
   const deleteMutation = useDeleteStudentDocument(studentId);
 
+  const [selectedCategory, setSelectedCategory] =
+    useState<DocumentTabKey>("ACADEMIC");
+
   const [checklistSearch, setChecklistSearch] = useState("");
   const [documentSearch, setDocumentSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -119,27 +190,10 @@ export function DMSSection({ studentId, studentName }: DMSSectionProps) {
   const checklist = documentsQuery.data?.checklist ?? [];
   const summary = documentsQuery.data?.summary;
 
-  useEffect(() => {
-    if (!selectedItemCode && checklist.length > 0) {
-      setSelectedItemCode(checklist[0].code);
-    }
-  }, [checklist, selectedItemCode]);
-
   const selectedItem = useMemo(
     () => checklist.find((item) => item.code === selectedItemCode) ?? null,
     [checklist, selectedItemCode],
   );
-
-  const filteredChecklist = useMemo(() => {
-    const value = checklistSearch.trim().toLowerCase();
-    if (!value) return checklist;
-
-    return checklist.filter(
-      (item) =>
-        item.name.toLowerCase().includes(value) ||
-        item.code.toLowerCase().includes(value),
-    );
-  }, [checklist, checklistSearch]);
 
   const filteredDocuments = useMemo(() => {
     const documents = selectedItem?.documents ?? [];
@@ -161,6 +215,55 @@ export function DMSSection({ studentId, studentName }: DMSSectionProps) {
     });
   }, [selectedItem, documentSearch, typeFilter, statusFilter]);
 
+  const groupedChecklist = useMemo(() => {
+    const groups: Record<DocumentTabKey, typeof checklist> = {
+      ACADEMIC: [],
+      PERSONAL: [],
+      TEST_SCORE: [],
+      APPLICATION: [],
+      UNIVERSITY: [],
+      LOAN: [],
+      VISA: [],
+    };
+
+    checklist.forEach((item) => {
+      const tab = getDocumentTab(item.category);
+      groups[tab].push(item);
+    });
+
+    return groups;
+  }, [checklist]);
+
+  const displayedChecklist = useMemo(() => {
+    const search = checklistSearch.trim().toLowerCase();
+    const categoryDocuments = groupedChecklist[selectedCategory] ?? [];
+
+    if (!search) {
+      return categoryDocuments;
+    }
+
+    return categoryDocuments.filter(
+      (item) =>
+        item.name.toLowerCase().includes(search) ||
+        item.code.toLowerCase().includes(search),
+    );
+  }, [groupedChecklist, selectedCategory, checklistSearch]);
+
+  useEffect(() => {
+    if (displayedChecklist.length === 0) {
+      setSelectedItemCode(null);
+      return;
+    }
+
+    const selectedItemExists = displayedChecklist.some(
+      (item) => item.code === selectedItemCode,
+    );
+
+    if (!selectedItemExists) {
+      setSelectedItemCode(displayedChecklist[0].code);
+    }
+  }, [displayedChecklist, selectedItemCode]);
+
   const requiredTotal = summary?.totalRequiredUploads ?? checklist.length;
   const completedTotal = summary?.completedRequiredUploads ?? 0;
   const pendingTotal = Math.max(requiredTotal - completedTotal, 0);
@@ -172,6 +275,18 @@ export function DMSSection({ studentId, studentName }: DMSSectionProps) {
     setFileError("");
     setProgress(0);
     setEditingDocument(null);
+  };
+
+  const handleCategoryChange = (category: DocumentTabKey) => {
+    const firstItem = groupedChecklist[category]?.[0];
+
+    setSelectedCategory(category);
+    setChecklistSearch("");
+    setSelectedItemCode(firstItem?.code ?? null);
+    setDocumentSearch("");
+    setTypeFilter("all");
+    setStatusFilter("all");
+    clearUploadForm();
   };
 
   const selectChecklistItem = (item: StudentDocumentChecklistItem) => {
@@ -387,19 +502,56 @@ export function DMSSection({ studentId, studentName }: DMSSectionProps) {
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-xs outline-none transition focus:border-red-500 dark:border-slate-800 dark:bg-slate-900"
             />
           </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {DOCUMENT_TABS.map((tab) => {
+              const documentCount = groupedChecklist[tab.key].length;
+              const isActive = selectedCategory === tab.key;
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => handleCategoryChange(tab.key)}
+                  className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-[11px] font-bold transition ${
+                    isActive
+                      ? "border-red-600 bg-red-600 text-white shadow-sm"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-red-900 dark:hover:bg-red-950/20"
+                  }`}
+                >
+                  <span className="truncate">{tab.label}</span>
+
+                  <span
+                    className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[9px] ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-white text-slate-500 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    {documentCount}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          {filteredChecklist.length === 0 ? (
+          {displayedChecklist.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center dark:border-slate-700">
               <FileText className="mx-auto h-7 w-7 text-slate-300" />
-              <p className="mt-2 text-xs font-bold text-slate-400">
-                No matching documents
+
+              <p className="mt-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                No documents found
+              </p>
+
+              <p className="mt-1 text-[10px] text-slate-400">
+                No matching documents are available in this category.
               </p>
             </div>
           ) : (
             <div className="space-y-1.5">
-              {filteredChecklist.map((item) => {
+              {displayedChecklist.map((item) => {
                 const isSelected = selectedItemCode === item.code;
                 const uploadedCount = item.documents.length;
 
@@ -490,7 +642,11 @@ export function DMSSection({ studentId, studentName }: DMSSectionProps) {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <Info className="h-3.5 w-3.5" />
-                    Required: {isOptionalItem(selectedItem) ? 0 : 1} file(s)
+                    Required:{" "}
+                    {isOptionalItem(selectedItem)
+                      ? 0
+                      : selectedItem.requiredCount}{" "}
+                    file(s)
                   </div>
                   <div className="mt-1 flex items-center gap-1.5">
                     <UploadCloud className="h-3.5 w-3.5" />

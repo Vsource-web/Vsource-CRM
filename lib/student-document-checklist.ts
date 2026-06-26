@@ -1,3 +1,12 @@
+export const CATEGORY_LABELS = {
+  ACADEMIC: "Academic",
+  PERSONAL: "Personal",
+  APPLICATION: "Application",
+  TEST_SCORE: "Test Score",
+  LOAN_PARENT: "Loan",
+  LOAN_STUDENT: "Loan",
+} as const;
+
 export const STUDENT_DOCUMENT_CHECKLIST = [
   {
     code: "CERTIFICATE_10TH",
